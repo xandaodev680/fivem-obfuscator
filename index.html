@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xandao Gamer • FiveM Lua Obfuscator</title>
+
+<style>
+:root{
+  --bg:#0b0e1a; --card:#131735; --ink:#e8ebff; --muted:#a7acff;
+  --accent:#7c8cff; --danger:#ff5d5d;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh;
+  background:radial-gradient(1200px 600px at 20% -10%, #1b2150 0%, transparent 60%), var(--bg);
+  color:var(--ink); font-family:Inter, Arial, sans-serif;
+}
+.wrap{max-width:980px;margin:auto;padding:28px}
+.card{
+  background:linear-gradient(180deg,#161a3d,var(--card));
+  border-radius:22px;padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.45)
+}
+.rgb{
+  font-size:34px;font-weight:900;letter-spacing:.6px;
+  background:linear-gradient(90deg,#ff0066,#ffea00,#00ff9c,#00c3ff,#b800ff);
+  background-size:300% 300%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:rgb 6s linear infinite
+}
+@keyframes rgb{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+textarea{
+  width:100%;min-height:260px;
+  border-radius:16px;border:1px solid #23286a;
+  padding:14px;background:#0b1030;color:#dfe3ff
+}
+button{
+  border:none;border-radius:14px;
+  padding:12px 16px;font-weight:800;
+  cursor:pointer
+}
+.btn{background:#7c8cff;color:#fff}
+.btn.alt{background:#0e1333;color:#cdd2ff}
+.btn.warn{background:#ff5d5d;color:#190000}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+
+/* LOGIN */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(7,9,25,.92);
+  display:grid;place-items:center;z-index:9
+}
+.login{
+  width:420px;max-width:92vw;
+  background:linear-gradient(180deg,#161a3d,#0f1336);
+  border-radius:22px;padding:22px
+}
+.login input{
+  width:100%;padding:12px;border-radius:14px;
+  border:1px solid #23286a;background:#0b1030;color:#fff
+}
+.error{color:var(--danger);font-size:13px;margin-top:8px}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="gate" class="overlay">
+  <div class="login">
+    <div class="rgb" style="font-size:28px">Xandao Gamer</div>
+    <p>Acesso protegido</p>
+    <input id="pass" type="password" placeholder="Senha">
+    <div class="row">
+      <button class="btn" onclick="login()">Entrar</button>
+    </div>
+    <div id="err" class="error" style="display:none">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="wrap">
+    <div class="card">
+      <div class="rgb">Xandao Gamer</div>
+
+      <div class="grid">
+        <textarea id="input" placeholder="Cole seu script Lua"></textarea>
+        <textarea id="output" placeholder="Script ofuscado"></textarea>
+      </div>
+
+      <div class="row">
+        <button class="btn" onclick="obfuscate()">Ofuscar</button>
+        <button class="btn alt" onclick="copy()">Copiar</button>
+        <button class="btn warn" onclick="clearAll()">Limpar</button>
+      </div>
+
+      <!-- PLAYER DE MÚSICA -->
+      <div class="card" style="margin-top:16px">
+        <h3>🎵 Player de Música</h3>
+        <div class="row">
+          <button class="btn" onclick="prevTrack()">⏮️</button>
+          <button class="btn" onclick="togglePlay()">⏯️</button>
+          <button class="btn" onclick="nextTrack()">⏭️</button>
+        </div>
+        <div class="row">
+          <input type="range" min="0" max="100" value="70" oninput="setVolume(this.value)">
+        </div>
+        <p id="trackName">Nenhuma música</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASSWORD = "xandaogamer102030";
+
+/* LOGIN */
+function login(){
+  if(pass.value === PASSWORD){
+    gate.style.display="none";
+    app.style.display="block";
+  } else err.style.display="block";
+}
+
+/* OFUSCADOR */
+function obfuscate(){
+  const code = input.value;
+  if(!code.trim()) return alert("Cole um script");
+  const b64 = btoa(unescape(encodeURIComponent(code)));
+  output.value =
+`local a="${b64}"
+local b=function(s)return load((mime and mime.unb64 or decodeBase64)(s)) end
+b(a)()`;
+}
+function copy(){output.select();document.execCommand("copy")}
+function clearAll(){input.value="";output.value=""}
+
+/* MÚSICA */
+const playlist=[
+  {name:"Track 1",src:"musicas/track1.mp3"},
+  {name:"Track 2",src:"musicas/track2.mp3"},
+  {name:"Track 3",src:"musicas/track3.mp3"}
+];
+let current=0;
+const audio=new Audio();
+
+function loadTrack(){
+  audio.src=playlist[current].src;
+  trackName.innerText="🎶 "+playlist[current].name;
+}
+function togglePlay(){ if(!audio.src) loadTrack(); audio.paused?audio.play():audio.pause() }
+function nextTrack(){ current=(current+1)%playlist.length; loadTrack(); audio.play() }
+function prevTrack(){ current=(current-1+playlist.length)%playlist.length; loadTrack(); audio.play() }
+function setVolume(v){ audio.volume=v/100 }
+
+
+</script>
+<script>
+// 🔒 BLOQUEIO DE SALVAR (Ctrl+S / Cmd+S)
+document.addEventListener("keydown", function (e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    alert("Salvar página desativado.");
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "u") {
+    e.preventDefault();
+    alert("Ação bloqueada.");
+  }
+  if (e.key === "F12") {
+    e.preventDefault();
+    alert("Ferramentas bloqueadas.");
+  }
+});
+
+// 🔒 BLOQUEIO DE CLIQUE DIREITO
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+// 🔒 BLOQUEIO DE EXECUÇÃO LOCAL (file://)
+// PERMITE localhost e servidores
+const isLocalFile = location.protocol === "file:";
+const isLocalhost =
+  location.hostname === "localhost" ||
+  location.hostname === "127.0.0.1";
+
+if (isLocalFile && !isLocalhost) {
+  document.body.innerHTML = `
+    <div style="
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      background:#0b0e1a;
+      color:#fff;
+      font-family:Arial;
+      text-align:center;
+    ">
+      <div>
+        <h1>🚫 Acesso bloqueado</h1>
+        <p>Este site só funciona online.</p>
+      </div>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
